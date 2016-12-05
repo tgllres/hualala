@@ -16,7 +16,7 @@ end
 function _M.GetHost(key)
     local red = redis:new()
     --redis hashtable
-    local res, err = red:hmget('myhash',key)
+        local res, err = red:hmget('myhash',key)
     if (res ~= nil) then
         ngx.log(ngx.ERR, "redis_search:"..res[1])
         return res[1]
