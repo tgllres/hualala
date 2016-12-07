@@ -14,6 +14,7 @@ local resolver = require "kong.core.resolver"
 local constants = require "kong.constants"
 local certificate = require "kong.core.certificate"
 local groupid_route = require "kong.core.groupid_route"
+local shopid_route = require "kong.core.shopid_route"
 local ngx_now = ngx.now
 local server_header = _KONG._NAME.."/".._KONG._VERSION
 
@@ -38,9 +39,12 @@ return {
     before = function()
       ngx.ctx.KONG_ACCESS_START = get_now()
       local header_group_id = tonumber(ngx.req.get_headers()["groupID"])
+	  local header_shop_id = tonumber(ngx.req.get_headers()["shopID"])
       local header_host = ngx.req.get_headers()["Host"]
       --route by groupID
-      if (header_group_id ~= nil) and (header_host ~= nil) then
+	  if (header_shop_id ~= nil) and (header_host ~= nil) then
+         local pay_status = shopid_route.CheckShopId(header_shop_id,header_host)
+      elseif (header_group_id ~= nil) and (header_host ~= nil) then
           groupid_route.CheckGroupId(header_group_id,header_host)
       end
       ngx.ctx.api, ngx.ctx.upstream_url, ngx.var.upstream_host = resolver.execute(ngx.var.request_uri, ngx.req.get_headers())
@@ -50,6 +54,9 @@ return {
       -- Append any querystring parameters modified during plugins execution
       local upstream_url = ngx.ctx.upstream_url
       local uri_args = ngx.req.get_uri_args()
+	  if (pay_status == true) then
+          local uri_args = ngx.re.sub(ngx.req.get_uri_args(), "/WxPay/", "/newWxPay/", "o")
+      end
       ngx.log(ngx.ERR, "upstream_url_before:"..upstream_url)
       if next(uri_args) then
         upstream_url = upstream_url.."?"..utils.encode_args(uri_args)
