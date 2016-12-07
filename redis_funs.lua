@@ -13,11 +13,11 @@ function _M.IsInGroupIds(set, value)
     end
 end
 
-function _M.GetHost(field)
+function _M.GetHost(hkey, field)
     local red = redis:new()
     --redis hashtable,from hll_route_vip
     --ngx.log(ngx.ERR, "redis_field:"..field)
-        local res, err = red:hget('hll_route_vip',field)
+        local res, err = red:hget(hkey, field)
     if (res ~= nil) then
         ngx.log(ngx.ERR, "redis_search:"..res)
         return res
